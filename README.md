@@ -7,38 +7,15 @@
 
 ## Referencias
 
-- [Java Language Updates](https://docs.oracle.com/en/java/javase/25/language/toc.htm)
+- [Java SE Documentation](https://docs.oracle.com/en/java/javase/index.html)
+- [Java 25 Language Updates](https://docs.oracle.com/en/java/javase/25/language/java-language-changes-release.html)
+- [Modular JDK](https://openjdk.org/projects/jigsaw/quick-start)
+- [Introduction to the Java HTTP Client](https://openjdk.org/groups/net/httpclient/intro.html)
+- [Javadoc - Comment Specification](https://docs.oracle.com/en/java/javase/25/docs/specs/javadoc/doc-comment-spec.html)
 
-## Contenidos:
+## Laboratorios
 
-- Introducción. 
-    - Nuevo ciclo de release de Java. 
-    - Visión general de Java 9. 
-    - Visión general de Java 10. 
-    - Visión general de Java 11. 
-- Trabajar con módulos en Java 9. 
-    - ClassPath Shortcomings. 
-    - Introducción a los módulos Java 9. 
-    - Descriptores, requires, exports de módulos. 
-    - Tipos de módulos. 
-    - Crear y utilizar módulos. 
-    - Migración – Trabajar con Jar y Classpath. 
-    - Servicios. 
-- JShell – un Java REPL. 
-    - Introducción a JShell. 
-    - Evaluar código (Snippets). 
-    - Utilizar bibliotecas (Módulos, Jars, etc). 
-    - Otras capacidades de jShell (comandos, scripts, etc). 
-- Programación funcional
-    - Inferencia de tipos. 
-    - Inferencia de tipos Local-Variable. 
-    - Visión general de Lambds. 
-    - Sintaxis Local-Variable para Lambdas. 
-- HttpClient. 
-    - Visión general. 
-    - API. 
-    - Uso y características. 
-- Cambios / Adiciones en la API. 
-    - Colecciones. 
-    - String.
-
+- [JShell - The Java Shell Tool](https://dev.java/learn/jshell-tool/#starting-stopping)
+- [Introduction to Modules in Java](https://dev.java/learn/modules/intro/)
+- [The Gatherer API](https://dev.java/learn/api/streams/gatherers/)
+- [Virtual Threads](https://dev.java/learn/new-features/virtual-threads/)
