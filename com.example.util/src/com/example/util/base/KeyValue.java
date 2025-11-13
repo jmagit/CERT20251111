@@ -2,6 +2,8 @@ package com.example.util.base;
 
 import java.lang.reflect.InvocationTargetException;
 
+import com.example.util.interno.Formato;
+
 public class KeyValue<K, V> {
 	private K key;
 	private V value;
@@ -24,7 +26,7 @@ public class KeyValue<K, V> {
 
 	public V getValue() {
 		if(value instanceof String s)
-			return (V)s.toUpperCase();
+			return (V)Formato.destaca(s);
 		return value;
 	}
 	public void setValue(V value) {

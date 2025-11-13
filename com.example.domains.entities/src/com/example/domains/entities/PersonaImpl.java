@@ -3,8 +3,10 @@ package com.example.domains.entities;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import com.example.util.anotations.Autor;
 import com.example.util.validadores.CadenasValidator;
 
+@Autor(nombre = "Anonimo")
 public class PersonaImpl implements Persona {
 	private int id;
 	private String nombre;
@@ -36,6 +38,8 @@ public class PersonaImpl implements Persona {
 	}
 
 	public void setNombre(String nombre) {
+		if(CadenasValidator.isNotBlank(nombre))
+			throw new IllegalArgumentException("El npmbre no puede estar en blanco");
 		this.nombre = nombre;
 	}
 

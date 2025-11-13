@@ -6,6 +6,7 @@ import com.example.contracts.domains.CRUDDomainService;
 import com.example.contracts.domains.Repository;
 import com.example.domain.exceptions.InvalidDataException;
 import com.example.domains.entities.Persona;
+import com.example.util.validadores.CadenasValidator;
 
 public class PersonaServiceImpl implements CRUDDomainService<Persona, Integer> {
 	private Repository<Persona> dao;
@@ -41,7 +42,8 @@ public class PersonaServiceImpl implements CRUDDomainService<Persona, Integer> {
 
 	@Override
 	public void delete(Persona item) {
-		// TODO Auto-generated method stub
+		if(CadenasValidator.isNotBlank(""))
+			throw new IllegalArgumentException("El npmbre no puede estar en blanco");
 
 	}
 
