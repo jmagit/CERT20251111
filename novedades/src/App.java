@@ -1,10 +1,14 @@
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import com.example.Dummy;
 import com.example.Factura;
 import com.example.Fichero;
+import com.example.NotFoundException;
+import com.example.Punto;
 
 /// # Heading
 /// 
@@ -53,11 +57,45 @@ void main(String[] args) {
 //			e.printStackTrace();
 //		}
 //
-		factuas();
-		IO.println(0.1 + 0.2 + 0.1);
-		IO.println(round(0.1 + 0.2));
-		IO.println(round(1 - 0.9));
+//		factuas();
+//		IO.println(0.1 + 0.2 + 0.1);
+//		IO.println(round(0.1 + 0.2));
+//		IO.println(round(1 - 0.9));
+		registros();
 	}
+
+record KeyValue(int key, String value) {}
+
+private void registros() {
+	var r1 = new Punto(0, 0, 0);
+	Object o = new Punto(10, 20, 30);
+	IO.println(r1);
+	IO.println(r1 == new Punto(0, 0, 0) ? "iguales" : "distintos" );
+	IO.println(r1.equals(new Punto(0, 0, 0)) ? "iguales" : "distintos" );
+	IO.println("x: %d y: %d".formatted(r1.x(), r1.y()));
+	
+	if(o instanceof Punto p) {
+		IO.println("x: %d y: %d z: %d".formatted(p.x(), p.y(), p.z()));
+	}
+	o = r1.minus(-1);
+	if(o instanceof Punto(int a, int b, int c)) {
+		IO.println(a + b + c);
+	}
+	switch(o) {
+	case Punto(int a, int b, int c) when a > 10 -> IO.println(a + b + c);
+	default -> IO.println(o.getClass().getName());
+	}
+	try {
+		Thread.sleep(100);
+	} catch (InterruptedException e) {
+		throw new NotFoundException(e);
+	}
+//	String s = null;
+//	if(s.equals("")) {}
+	var d = new Dummy("");
+	d.setValor(null);
+	Date date;
+}
 
 private double round(double value) {
 	return (new java.math.BigDecimal(value)).setScale(15, java.math.RoundingMode.HALF_UP).doubleValue();
@@ -80,6 +118,7 @@ private void factuas() {
 	IO.println("Factura2: " + l2.getNumFactura());
 	
 }
+
 private void cierre() throws Exception {
 //	var fich = new Fichero();
 //	try {
