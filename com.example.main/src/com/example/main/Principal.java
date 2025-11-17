@@ -18,7 +18,7 @@ public class Principal {
 		try {
 			var srv = new PersonaServiceImpl(new PersonaRepository());
 			srv.modify(new ProfesorImpl(0, "Pepito", "Grillo", LocalDate.of(2000, 1, 1), "Java"));
-			srv.add(null);
+			srv.add(new ProfesorImpl(0, "Pepito", "Grillo", LocalDate.of(2000, 1, 1), "Java"));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
