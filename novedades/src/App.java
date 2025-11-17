@@ -9,6 +9,7 @@ import com.example.Factura;
 import com.example.Fichero;
 import com.example.NotFoundException;
 import com.example.Punto;
+import com.example.Tarea;
 
 /// # Heading
 /// 
@@ -61,10 +62,72 @@ void main(String[] args) {
 //		IO.println(0.1 + 0.2 + 0.1);
 //		IO.println(round(0.1 + 0.2));
 //		IO.println(round(1 - 0.9));
-		registros();
+//		registros();
+//		colecciones();
+		try {
+			hilosDePlataforma();
+//			hilosVirtuales();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+//sum = 48761; time = 10224675000 ns
+//sum = 49420; time = 100352696500 ns
+//sum = 49801; time = 3182049700 ns
 
 record KeyValue(int key, String value) {}
+
+private void hilosDePlataforma() throws Exception {
+	List<Tarea> tasks = new ArrayList<>();
+	for (int i = 0; i < 10_000; i++) { tasks.add(new Tarea(i)); }
+	long time = System.nanoTime(), sum = 0;
+
+	 try (var executor = Executors.newFixedThreadPool(100)) {
+		List<Future<Integer>> futures = executor.invokeAll(tasks);
+		for (Future<Integer> future : futures) {
+			sum += future.get();
+		}
+		time = System.nanoTime() - time;
+		System.out.println("sum = " + sum + "; time = " + time + " ns");
+	}
+}
+
+//sum = 49855; time = 10159058700 ns
+//sum = 48488; time = 1340552400 ns
+
+private void hilosVirtuales() throws Exception {
+	List<Tarea> tasks = new ArrayList<>();
+	for (int i = 0; i < 10_000; i++) { tasks.add(new Tarea(i)); }
+	long time = System.nanoTime(), sum = 0;
+
+	try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+		List<Future<Integer>> futures = executor.invokeAll(tasks);
+		for (Future<Integer> future : futures) {
+			sum += future.get();
+		}
+		time = System.nanoTime() - time;
+		System.out.println("sum = " + sum + "; time = " + time + " ns");
+	}
+}
+
+private void colecciones() {
+	var numeros = List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+	numeros.stream()
+			.gather(Gatherers.fold(() -> "", (collector, number) -> collector + number))
+			.findFirst().ifPresent(IO::println);
+	numeros.stream()
+			.gather(Gatherers.scan(() -> "", (collector, number) -> collector + number))
+			.forEach(IO::println);
+	numeros.stream()
+			.gather(Gatherers.scan(() -> 0, (collector, number) -> collector + number))
+			.forEach(IO::println);
+	numeros.stream()
+			.gather(Gatherers.windowFixed(3))
+			.forEach(IO::println);
+	numeros.stream().gather(Gatherers.windowSliding(5))
+			.forEach(IO::println);
+}
 
 private void registros() {
 	var r1 = new Punto(0, 0, 0);
