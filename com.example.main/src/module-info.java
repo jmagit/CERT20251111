@@ -1,4 +1,5 @@
 module com.example.main {
+	exports com.example.main;
 	requires transitive com.example.domains.services;
 	requires transitive com.example.infraestructure;
 	

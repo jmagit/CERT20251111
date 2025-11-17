@@ -12,6 +12,7 @@ public class KeyValue<K, V> {
 		this.key = key;
 		this.value = value;
 	}
+	@SuppressWarnings("unchecked")
 	public KeyValue(Class<K> tipo, V value) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, SecurityException {
 		this.key = (K)tipo.getConstructors()[0].newInstance();
 		this.value = value;
@@ -24,6 +25,7 @@ public class KeyValue<K, V> {
 		this.key = key;
 	}
 
+	@SuppressWarnings("unchecked")
 	public V getValue() {
 		if(value instanceof String s)
 			return (V)Formato.destaca(s);
@@ -36,6 +38,7 @@ public class KeyValue<K, V> {
 	public <T> T calcula(T item, int otro) {
 		return item;
 	}
+	@SuppressWarnings("deprecation")
 	public <T> T conv(String cad, Class<T> tipo) throws InstantiationException, IllegalAccessException {
 		return tipo.newInstance();
 	}
