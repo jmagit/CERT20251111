@@ -1,8 +1,9 @@
+import java.awt.Image;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.Date;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.concurrent.ExecutionException;
 
 import com.example.Dummy;
 import com.example.Factura;
@@ -33,51 +34,157 @@ String nombre = "mundo";
 ///
 /// @since 11
 void main(String[] args) {
-//	IO.println(nuevoSwich(6));
-//	IO.println(nuevoSwich(7));
-////	IO.println(nuevoSwich(77));
-//	IO.println(nuevoSwichTipo(77));
-//	IO.println(nuevoSwichTipo("77"));
-//	IO.println(nuevoSwichTipo("nuevoSwichTipo"));
-//	try {
-//		cierre();
-////		System.gc();
-//		System.runFinalization();
-////		Thread.sleep(1000);
-//		cierre();
-//		var fich = new Fichero();
-//	} catch (Exception e) {
-//		e.printStackTrace();
-//	}
-//	IO.println("Termino");
-//		System.gc();
-//		try {
-//			Thread.sleep(1000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+//	demosNuevoSwich();
+//	autoCierre();
 //
-//		factuas();
-//		IO.println(0.1 + 0.2 + 0.1);
-//		IO.println(round(0.1 + 0.2));
-//		IO.println(round(1 - 0.9));
-//		registros();
-//		colecciones();
-		try {
-			hilosDePlataforma();
-//			hilosVirtuales();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//	factuas();
+//	demosIEEE754();
+//	registros();
+//	colecciones();
+	laboratorio();
+}
+
+private void laboratorio() {
+	try {
+//		hilosDePlataforma();
+//		hilosVirtuales();
+//		virtualThreadDemo1();
+//		virtualThreadDemo2();
+//		virtualThreadDemo3();
+		virtualThreadDemo4();
+//		pinningDemo();
+	} catch (Exception e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
 	}
+}
+
 //sum = 48761; time = 10224675000 ns
 //sum = 49420; time = 100352696500 ns
 //sum = 49801; time = 3182049700 ns
 
 record KeyValue(int key, String value) {}
 
+private void pinningDemo() throws InterruptedException, ExecutionException {
+	ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
+	// Executors.newCachedThreadPool();
+
+	final int TASKS = 20;
+	long start = System.nanoTime();
+	for (int i = 1; i <= TASKS; i++) {
+		// service.submit(() -> block());
+		service.submit(() -> rblock());
+	}
+	for (int i = 1; i <= TASKS; i++) {
+		service.submit(() -> noblock());
+	}
+	service.close();
+	long end = System.nanoTime();
+	System.out.printf("%.2f%n", (end - start) * 1E-9);
+}
+
+private synchronized void block() {
+	IO.println("Entering block " + Thread.currentThread());
+	LockSupport.parkNanos(1_000_000_000);
+	IO.println("Exiting block " + Thread.currentThread());
+}
+
+private Lock lock = new ReentrantLock();
+
+private void rblock() {
+	lock.lock();
+	try {
+		IO.println("Entering rblock " + Thread.currentThread());
+		LockSupport.parkNanos(1_000_000_000);
+		IO.println("Exiting rblock " + Thread.currentThread());
+	} finally {
+		lock.unlock();
+	}
+}
+
+private void noblock() {
+	IO.println("Entering noblock " + Thread.currentThread());
+	LockSupport.parkNanos(1_000_000_000);
+	IO.println("Exiting noblock " + Thread.currentThread());
+}
+
+private void virtualThreadDemo4() throws InterruptedException, ExecutionException {
+    try(ExecutorService service = Executors.newVirtualThreadPerTaskExecutor()) {
+	    List<Future<String>> futures = new ArrayList<>();
+	    final int TASKS = 250;
+	    for (int i = 1; i <= TASKS; i++)
+	       futures.add(service.submit(() -> getWithSemaphore("https://horstmann.com/random/word")));
+	    for (Future<String> f : futures)
+	       IO.print(f.get() + " ");
+	    IO.println();
+    }
+}
+
+private final Semaphore SEMAPHORE = new Semaphore(20);
+private String getWithSemaphore(String url) {
+   try {
+      var request = HttpRequest.newBuilder().uri(new URI(url)).GET().build();
+      SEMAPHORE.acquire();
+      try {
+         Thread.sleep(100);
+         return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+      } finally {
+         SEMAPHORE.release();
+      }
+   } catch (Exception ex) {
+      ex.printStackTrace();
+      var rex = new RuntimeException();
+      rex.initCause(ex);
+      throw rex;
+   }
+}   
+
+private void virtualThreadDemo3() throws InterruptedException, ExecutionException {
+    ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
+    List<Callable<String>> callables = new ArrayList<>();
+    final int ADJECTIVES = 4;
+    for (int i = 1; i <= ADJECTIVES; i++)
+       callables.add(() -> get("https://horstmann.com/random/adjective"));
+    callables.add(() -> get("https://horstmann.com/random/noun"));
+    List<String> results = new ArrayList<>();
+    for (Future<String> f : service.invokeAll(callables))
+       results.add(f.get());
+    IO.println(String.join(" ", results));
+    service.close();
+}
+private void virtualThreadDemo2() throws InterruptedException, ExecutionException {
+    ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
+    Future<String> f1 = service.submit(() -> get("https://horstmann.com/random/adjective"));
+    Future<String> f2 = service.submit(() -> get("https://horstmann.com/random/noun"));
+    String result = f1.get() + " " + f2.get();
+    IO.println(result);
+    service.close();	
+}
+
+private HttpClient client = HttpClient.newHttpClient();
+private String get(String url) {
+   try {
+      var request = HttpRequest.newBuilder().uri(new URI(url)).GET().build();
+      return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+   } catch (Exception ex) {
+      var rex = new RuntimeException();
+      rex.initCause(ex);
+      throw rex;
+   }
+}   
+
+private void virtualThreadDemo1() {
+    final int NTASKS = 100; 
+    ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
+     for (int i = 0; i < NTASKS; i++) {
+        service.submit(() -> {
+           long id = Thread.currentThread().threadId(); 
+           LockSupport.parkNanos(1_000_000_000);
+           IO.println(id);
+        });
+     }
+     service.close();
+}
 private void hilosDePlataforma() throws Exception {
 	List<Tarea> tasks = new ArrayList<>();
 	for (int i = 0; i < 10_000; i++) { tasks.add(new Tarea(i)); }
@@ -160,6 +267,11 @@ private void registros() {
 	Date date;
 }
 
+private void demosIEEE754() {
+	IO.println(0.1 + 0.2 + 0.1);
+	IO.println(round(0.1 + 0.2));
+	IO.println(round(1 - 0.9));
+}
 private double round(double value) {
 	return (new java.math.BigDecimal(value)).setScale(15, java.math.RoundingMode.HALF_UP).doubleValue();
 }
@@ -182,6 +294,27 @@ private void factuas() {
 	
 }
 
+private void autoCierre() {
+	try {
+		cierre();
+//		System.gc();
+		System.runFinalization();
+//		Thread.sleep(1000);
+		cierre();
+		var fich = new Fichero();
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	IO.println("Termino");
+		System.gc();
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+}
+
 private void cierre() throws Exception {
 //	var fich = new Fichero();
 //	try {
@@ -200,6 +333,16 @@ private void cierre() throws Exception {
 //		fich.write("Algo");
 //	fich.write("Algo");
 	//// fich.close(); fich = null; fich.write("Algo mas");
+}
+
+
+private void demosNuevoSwich() {
+	IO.println(nuevoSwich(6));
+	IO.println(nuevoSwich(7));
+//	IO.println(nuevoSwich(77));
+	IO.println(nuevoSwichTipo(77));
+	IO.println(nuevoSwichTipo("77"));
+	IO.println(nuevoSwichTipo("nuevoSwichTipo"));
 }
 
 private String nuevoSwichTipo(Object o) {
