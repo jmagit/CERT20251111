@@ -1,5 +1,8 @@
+import module java.base;
 import java.awt.Image;
 import java.net.http.HttpClient;
+import java.net.http.HttpClient.Redirect;
+import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.Date;
@@ -11,6 +14,7 @@ import com.example.Fichero;
 import com.example.NotFoundException;
 import com.example.Punto;
 import com.example.Tarea;
+import com.example.laboratorios.HilosVirtuales;
 
 /// # Heading
 /// 
@@ -41,22 +45,72 @@ void main(String[] args) {
 //	demosIEEE754();
 //	registros();
 //	colecciones();
-	laboratorio();
+//	laboratorio();
+	cliente();
 }
 
+private void cliente() {
+	HttpClient cliente = HttpClient.newBuilder()
+			.version(Version.HTTP_2)
+			.followRedirects(Redirect.NORMAL)
+//			.proxy(ProxySelector.of(new InetSocketAddress("proxy.corp", 8080)))
+			.build();
+	try {
+		HttpRequest solicitud = HttpRequest.newBuilder()
+				.uri(new URI("https://jsonplaceholder.typicode.com/posts/1"))
+				.GET()
+				.header("Accept", "application/json")
+				.timeout(Duration.ofSeconds(10))
+				.build();
+	    HttpResponse<String> respuesta = cliente.send(solicitud, HttpResponse.BodyHandlers.ofString());
+	    System.out.println("Código de estado: " + respuesta.statusCode());
+	    System.out.println("Cuerpo de la respuesta:\n" + respuesta.body());
+	} catch (IOException | InterruptedException | URISyntaxException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	LockSupport.parkNanos(1_000);
+	var json = """
+{
+  "userId": 1,
+  "id": 1,
+  "title": "hola mundo",
+  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+}
+			""";
+	try {
+		HttpRequest solicitud = HttpRequest.newBuilder()
+				.uri(new URI("https://jsonplaceholder.typicode.com/posts"))
+				.POST(HttpRequest.BodyPublishers.ofString(json))
+				.header("Accept", "application/json")
+				.timeout(Duration.ofSeconds(10))
+				.build();
+	    HttpResponse<String> respuesta = cliente.send(solicitud, HttpResponse.BodyHandlers.ofString());
+	    System.out.println("Código de estado: " + respuesta.statusCode());
+	    System.out.println("Cabecera location: " + respuesta.headers().firstValue("location").orElse("sin location"));
+	    System.out.println("Cuerpo de la respuesta:\n" + respuesta.body());
+	} catch (IOException | InterruptedException | URISyntaxException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+}
+
+
 private void laboratorio() {
+	var lab = new HilosVirtuales();
 	try {
 //		hilosDePlataforma();
 //		hilosVirtuales();
-//		virtualThreadDemo1();
-//		virtualThreadDemo2();
-//		virtualThreadDemo3();
-		virtualThreadDemo4();
-//		pinningDemo();
+//		lab.virtualThreadDemo1();
+		lab.virtualThreadDemo2();
+//		lab.virtualThreadDemo3();
+//		lab.virtualThreadDemo4();
+//		lab.pinningDemo();
 	} catch (Exception e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
+	IO.println("\nOK");
 }
 
 //sum = 48761; time = 10224675000 ns
@@ -65,126 +119,7 @@ private void laboratorio() {
 
 record KeyValue(int key, String value) {}
 
-private void pinningDemo() throws InterruptedException, ExecutionException {
-	ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
-	// Executors.newCachedThreadPool();
 
-	final int TASKS = 20;
-	long start = System.nanoTime();
-	for (int i = 1; i <= TASKS; i++) {
-		// service.submit(() -> block());
-		service.submit(() -> rblock());
-	}
-	for (int i = 1; i <= TASKS; i++) {
-		service.submit(() -> noblock());
-	}
-	service.close();
-	long end = System.nanoTime();
-	System.out.printf("%.2f%n", (end - start) * 1E-9);
-}
-
-private synchronized void block() {
-	IO.println("Entering block " + Thread.currentThread());
-	LockSupport.parkNanos(1_000_000_000);
-	IO.println("Exiting block " + Thread.currentThread());
-}
-
-private Lock lock = new ReentrantLock();
-
-private void rblock() {
-	lock.lock();
-	try {
-		IO.println("Entering rblock " + Thread.currentThread());
-		LockSupport.parkNanos(1_000_000_000);
-		IO.println("Exiting rblock " + Thread.currentThread());
-	} finally {
-		lock.unlock();
-	}
-}
-
-private void noblock() {
-	IO.println("Entering noblock " + Thread.currentThread());
-	LockSupport.parkNanos(1_000_000_000);
-	IO.println("Exiting noblock " + Thread.currentThread());
-}
-
-private void virtualThreadDemo4() throws InterruptedException, ExecutionException {
-    try(ExecutorService service = Executors.newVirtualThreadPerTaskExecutor()) {
-	    List<Future<String>> futures = new ArrayList<>();
-	    final int TASKS = 250;
-	    for (int i = 1; i <= TASKS; i++)
-	       futures.add(service.submit(() -> getWithSemaphore("https://horstmann.com/random/word")));
-	    for (Future<String> f : futures)
-	       IO.print(f.get() + " ");
-	    IO.println();
-    }
-}
-
-private final Semaphore SEMAPHORE = new Semaphore(20);
-private String getWithSemaphore(String url) {
-   try {
-      var request = HttpRequest.newBuilder().uri(new URI(url)).GET().build();
-      SEMAPHORE.acquire();
-      try {
-         Thread.sleep(100);
-         return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-      } finally {
-         SEMAPHORE.release();
-      }
-   } catch (Exception ex) {
-      ex.printStackTrace();
-      var rex = new RuntimeException();
-      rex.initCause(ex);
-      throw rex;
-   }
-}   
-
-private void virtualThreadDemo3() throws InterruptedException, ExecutionException {
-    ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
-    List<Callable<String>> callables = new ArrayList<>();
-    final int ADJECTIVES = 4;
-    for (int i = 1; i <= ADJECTIVES; i++)
-       callables.add(() -> get("https://horstmann.com/random/adjective"));
-    callables.add(() -> get("https://horstmann.com/random/noun"));
-    List<String> results = new ArrayList<>();
-    for (Future<String> f : service.invokeAll(callables))
-       results.add(f.get());
-    IO.println(String.join(" ", results));
-    service.close();
-}
-private void virtualThreadDemo2() throws InterruptedException, ExecutionException {
-    ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
-    Future<String> f1 = service.submit(() -> get("https://horstmann.com/random/adjective"));
-    Future<String> f2 = service.submit(() -> get("https://horstmann.com/random/noun"));
-    String result = f1.get() + " " + f2.get();
-    IO.println(result);
-    service.close();	
-}
-
-private HttpClient client = HttpClient.newHttpClient();
-private String get(String url) {
-   try {
-      var request = HttpRequest.newBuilder().uri(new URI(url)).GET().build();
-      return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-   } catch (Exception ex) {
-      var rex = new RuntimeException();
-      rex.initCause(ex);
-      throw rex;
-   }
-}   
-
-private void virtualThreadDemo1() {
-    final int NTASKS = 100; 
-    ExecutorService service = Executors.newVirtualThreadPerTaskExecutor();
-     for (int i = 0; i < NTASKS; i++) {
-        service.submit(() -> {
-           long id = Thread.currentThread().threadId(); 
-           LockSupport.parkNanos(1_000_000_000);
-           IO.println(id);
-        });
-     }
-     service.close();
-}
 private void hilosDePlataforma() throws Exception {
 	List<Tarea> tasks = new ArrayList<>();
 	for (int i = 0; i < 10_000; i++) { tasks.add(new Tarea(i)); }
