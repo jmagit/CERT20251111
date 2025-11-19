@@ -1,6 +1,7 @@
 package com.example.restclient;
 
 public class HttpException extends RuntimeException {
+	private static final long serialVersionUID = 1L;
 	private final int statusCode;
 	
 	private static void validate(int statusCode) {
@@ -35,6 +36,7 @@ public class HttpException extends RuntimeException {
 		super(message, cause, enableSuppression, writableStackTrace);
 		this.statusCode = statusCode;
 	}
+	
 	public int getStatusCode() {
 		return statusCode;
 	}

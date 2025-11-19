@@ -63,12 +63,12 @@ private void clienteRest() {
 		return null;
 	};
 	List<CompletableFuture<Void>> peticiones = List.of( 
-			postProxy.getAsync("title=nesciunt quas odio")
-				.thenAccept(IO::println)
-				.exceptionally(errorHandler),
 			postProxy.getAsync(33)
 				.thenApply(postProxy::post)
 				.thenApply(item -> postProxy.put(44, item))
+				.thenAccept(IO::println)
+				.exceptionally(errorHandler),
+			postProxy.getAsync("title=nesciunt quas odio")
 				.thenAccept(IO::println)
 				.exceptionally(errorHandler),
 			postProxy.getAsync(101)
@@ -77,23 +77,23 @@ private void clienteRest() {
 			);
 	CompletableFuture.allOf(peticiones.toArray(new CompletableFuture[0])).join();
 	
-	var json = """
-{
-  "userId": 1,
-  "id": 1,
-  "title": "hola mundo",
-  "body": "quia et suscipit"
-}
-			""";
-	
-	try {
-		IO.println("GET:\n" + postProxy.get(10));
-		IO.println("POST:\n" + postProxy.post(json));
-		IO.println("PUT:\n" + postProxy.put(22, postProxy.get(11)));
-		IO.println(postProxy.get(1111));
-	} catch (HttpException e) {
-		System.err.println("ERROR %d %s".formatted(e.getStatusCode(), e.getMessage()).trim());
-	}
+//	var json = """
+//{
+//  "userId": 1,
+//  "id": 1,
+//  "title": "hola mundo",
+//  "body": "quia et suscipit"
+//}
+//			""";
+//	
+//	try {
+//		IO.println("GET:\n" + postProxy.get(10));
+//		IO.println("POST:\n" + postProxy.post(json));
+//		IO.println("PUT:\n" + postProxy.put(22, postProxy.get(11)));
+//		IO.println(postProxy.get(1111));
+//	} catch (HttpException e) {
+//		System.err.println("ERROR %d %s".formatted(e.getStatusCode(), e.getMessage()).trim());
+//	}
 }
 
 private void cliente() {

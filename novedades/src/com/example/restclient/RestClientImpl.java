@@ -20,7 +20,8 @@ public class RestClientImpl implements RestClient {
 		cliente = HttpClient.newBuilder()
 				.version(Version.HTTP_1_1)
 				.followRedirects(Redirect.NORMAL)
-				.connectTimeout(Duration.ofSeconds(10)).build();
+				.connectTimeout(Duration.ofSeconds(10))
+				.build();
 	}
 
 	@Override
