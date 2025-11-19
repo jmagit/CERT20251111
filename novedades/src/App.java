@@ -6,7 +6,6 @@ import java.net.http.HttpClient.Version;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.sql.Date;
-import java.util.concurrent.ExecutionException;
 
 import com.example.Dummy;
 import com.example.Factura;
@@ -15,6 +14,9 @@ import com.example.NotFoundException;
 import com.example.Punto;
 import com.example.Tarea;
 import com.example.laboratorios.HilosVirtuales;
+import com.example.restclient.HttpException;
+import com.example.restclient.RestClient;
+import com.example.restclient.RestClientImpl;
 
 /// # Heading
 /// 
@@ -46,7 +48,52 @@ void main(String[] args) {
 //	registros();
 //	colecciones();
 //	laboratorio();
-	cliente();
+//	cliente();
+	clienteRest();
+}
+
+private void clienteRest() {
+	RestClient postProxy = new RestClientImpl("https://jsonplaceholder.typicode.com/posts");
+	
+	Function<Throwable, ? extends Void> errorHandler = ex -> {
+		if(ex.getCause() instanceof HttpException e)
+			System.err.println("ERROR %d %s".formatted(e.getStatusCode(), e.getMessage()).trim());
+		else
+			System.err.println("ERROR %s %s".formatted(ex.getClass().getSimpleName(), ex.getMessage()));
+		return null;
+	};
+	List<CompletableFuture<Void>> peticiones = List.of( 
+			postProxy.getAsync("title=nesciunt quas odio")
+				.thenAccept(IO::println)
+				.exceptionally(errorHandler),
+			postProxy.getAsync(33)
+				.thenApply(postProxy::post)
+				.thenApply(item -> postProxy.put(44, item))
+				.thenAccept(IO::println)
+				.exceptionally(errorHandler),
+			postProxy.getAsync(101)
+				.thenAccept(IO::println)
+				.exceptionally(errorHandler)
+			);
+	CompletableFuture.allOf(peticiones.toArray(new CompletableFuture[0])).join();
+	
+	var json = """
+{
+  "userId": 1,
+  "id": 1,
+  "title": "hola mundo",
+  "body": "quia et suscipit"
+}
+			""";
+	
+	try {
+		IO.println("GET:\n" + postProxy.get(10));
+		IO.println("POST:\n" + postProxy.post(json));
+		IO.println("PUT:\n" + postProxy.put(22, postProxy.get(11)));
+		IO.println(postProxy.get(1111));
+	} catch (HttpException e) {
+		System.err.println("ERROR %d %s".formatted(e.getStatusCode(), e.getMessage()).trim());
+	}
 }
 
 private void cliente() {
